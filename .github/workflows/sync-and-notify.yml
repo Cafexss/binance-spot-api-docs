@@ -1,0 +1,65 @@
+name: Sync Upstream & Notify MD Changes
+
+on:
+  schedule:
+    - cron: "*/1 * * * *"   # 每 1 分钟执行一次
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 拉取你的 fork 仓库
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # 2. 添加 upstream（原始仓库 binance/binance-spot-api-docs）
+      - name: Add upstream
+        run: |
+          git remote add upstream https://github.com/binance/binance-spot-api-docs.git
+          git fetch upstream
+
+      # 3. 比较你当前分支与 upstream/master 的差异
+      - name: Compare commits
+        id: diff
+        run: |
+          git log HEAD..upstream/master --name-only > changes.txt || true
+          echo "changed=$(cat changes.txt | xargs)" >> $GITHUB_OUTPUT
+
+      # 4. 若没有变化，结束
+      - name: No upstream change
+        if: ${{ steps.diff.outputs.changed == '' }}
+        run: echo "No upstream updates."
+
+      # 5. 有变化 → merge upstream 内容到你的仓库
+      - name: Merge upstream changes
+        if: ${{ steps.diff.outputs.changed != '' }}
+        run: |
+          git merge upstream/master --no-edit
+          git push origin master
+
+      # 6. 检查是否包含 .md 文件变更
+      - name: Detect MD changes
+        id: mdcheck
+        run: |
+          if grep -E "\.md$" changes.txt; then
+            echo "md_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "md_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      # 7. 有 .md 更新 → 发送钉钉通知（使用 secrets）
+      - name: Notify DingTalk
+        if: ${{ steps.mdcheck.outputs.md_changed == 'true' }}
+        env:
+          WEBHOOK: ${{ secrets.DINGDING_WEBHOOK }}
+        run: |
+          TEXT="📢 Binance API 文档（上游仓库）Markdown 文件更新！\n仓库：binance/binance-spot-api-docs\n时间：$(date)\n变更文件：\n$(grep .md changes.txt)"
+          curl -X POST "$WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"msgtype\": \"text\",
+              \"text\": {\"content\": \"$TEXT\"}
+            }"
