@@ -2,7 +2,7 @@ name: Sync Upstream & Notify MD Changes
 
 on:
   schedule:
-    - cron: "*/1 * * * *"   # 每 1 分钟执行一次
+    - cron: "*/1 * * * *"   # 每 1 分钟执行一次（但在 fork 仓库不会自动触发）
   workflow_dispatch:
 
 jobs:
@@ -28,10 +28,17 @@ jobs:
           git log HEAD..upstream/master --name-only > changes.txt || true
           echo "changed=$(cat changes.txt | xargs)" >> $GITHUB_OUTPUT
 
-      # 4. 若没有变化，结束
+      # 4. 若没有变化，输出信息
       - name: No upstream change
         if: ${{ steps.diff.outputs.changed == '' }}
         run: echo "No upstream updates."
+
+      # ⭐ 修复：设置 Git 用户身份，避免 merge/push 报错
+      - name: Set Git identity
+        if: ${{ steps.diff.outputs.changed != '' }}
+        run: |
+          git config --global user.email "binanactions@github.com"
+          git config --global user.name "GitHub Actions"
 
       # 5. 有变化 → merge upstream 内容到你的仓库
       - name: Merge upstream changes
