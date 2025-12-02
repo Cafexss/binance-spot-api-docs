@@ -113,6 +113,7 @@
    <field name='Username' required='N'/>
    <field name='MessageHandling' required='N'/>
    <field name='ResponseMode' required='N'/>
+   <field name='ExecutionReportType' required='N'/>
    <field name='DropCopyFlag' required='N'/>
    <field name='UUID' required='N'/>
    <field name='SBESchemaID' required='N'/>
@@ -533,5 +534,9 @@
   <field number='25046' name='OPO' type='BOOLEAN'/>
   <field number='25050' name='SBESchemaID' type='INT'/>
   <field number='25051' name='SBESchemaVersion' type='INT'/>
+  <field number='25052' name='ExecutionReportType' type='INT'>
+   <value enum='1' description='FULL'/>
+   <value enum='2' description='MINI'/>
+  </field>
  </fields>
 </fix>
