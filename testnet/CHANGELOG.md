@@ -1,9 +1,15 @@
 # CHANGELOG for Binance SPOT Testnet
 
-**Last Updated: 2025-11-28**
+**Last Updated: 2025-12-02**
 
 **Note:** All features here will only apply to the [SPOT Testnet](https://testnet.binance.vision/).
 This is not always synced with the live exchange.
+
+### 2025-12-02
+
+* [QuickFix Schema for FIX OE](https://github.com/binance/binance-spot-api-docs/blob/master/fix/schemas/spot-fix-oe.xml) has been updated to add `ExecutionReportType` for FIX-SBE support.
+
+---
 
 ### 2025-11-28
 
